@@ -1,0 +1,168 @@
+from flask import Flask, jsonify, request
+import requests
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestRegressor
+import os
+
+app = Flask(__name__)
+
+# API configurations
+COINGECKO_API = "https://api.coingecko.com/api/v3"
+ENERGY_API = "https://api.example.com/energy-prices"  # Replace with real API
+
+# Fetch crypto prices
+def get_crypto_prices(coins=["bitcoin", "ethereum"]):
+    try:
+        url = f"{COINGECKO_API}/simple/price?ids={','.join(coins)}&vs_currencies=usd"
+        response = requests.get(url).json()
+        return {coin: response[coin]["usd"] for coin in coins}
+    except Exception as e:
+        print(f"Error fetching prices: {e}")
+        return {}
+
+# Fetch energy prices (mock)
+def get_energy_price():
+    try:
+        # Replace with real energy API
+        return 0.12  # $0.12/kWh (mock value)
+    except:
+        return 0.12
+
+# Train AI model for profitability
+def train_model():
+    # Sample data (replace with real dataset)
+    data = {
+        "price_usd": [50000, 51000, 49000, 52000],
+        "difficulty": [20e9, 21e9, 19e9, 22e9],
+        "energy_cost": [0.12, 0.15, 0.10, 0.13],
+        "hashrate": [100, 120, 110, 130],
+        "profit": [0.001, 0.0012, 0.0009, 0.0013]
+    }
+    df = pd.DataFrame(data)
+    X = df[["price_usd", "difficulty", "energy_cost", "hashrate"]]
+    y = df["profit"]
+    
+    model = RandomForestRegressor(n_estimators=100, random_state=42)
+    model.fit(X, y)
+    return model
+
+# Predict profitability
+def predict_profit(model, price, difficulty, energy_cost, hashrate=100):
+    features = np.array([[price, difficulty, energy_cost, hashrate]])
+    return model.predict(features)[0]
+
+# API endpoint for mining optimization
+@app.route("/optimize", methods=["GET"])
+def optimize_mining():
+    coins = ["bitcoin", "ethereum"]
+    energy_cost = get_energy_price()
+    prices = get_crypto_prices(coins)
+    model = train_model()
+    
+    results = []
+    for coin in coins:
+        price = prices.get(coin, 0)
+        difficulty = get_mining_data(coin).get("difficulty", 20e9)  # Mock function
+        profit = predict_profit(model, price, difficulty, energy_cost)
+        results.append({"coin": coin, "profit": profit, "price": price})
+    
+    best_coin = max(results, key=lambda x: x["profit"], default=None)
+    return jsonify({
+        "best_coin": best_coin["coin"],
+        "profit": best_coin["profit"],
+        "energy_cost": energy_cost,
+        "timestamp": datetime.now().isoformat()
+    })
+
+# Mock mining data function
+def get_mining_data(coin):
+    return {"difficulty": 20e9}  # Replace with real API call
+
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=5000)
+
+
+
+Frontend: Flutter (Simplified Example)This creates a mobile app interface to display AI recommendations and mining stats.
+
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+void main() => runApp(EnergyAImpactApp());
+
+class EnergyAImpactApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'EnergyAImpact',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: MiningDashboard(),
+    );
+  }
+}
+
+class MiningDashboard extends StatefulWidget {
+  @override
+  _MiningDashboardState createState() => _MiningDashboardState();
+}
+
+class _MiningDashboardState extends State<MiningDashboard> {
+  Map<String, dynamic>? miningData;
+
+  Future<void> fetchMiningData() async {
+    try {
+      final response = await http.get(Uri.parse('http://your-backend-ip:5000/optimize'));
+      if (response.statusCode == 200) {
+        setState(() {
+          miningData = jsonDecode(response.body);
+        });
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchMiningData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('EnergyAImpact - AI Mining')),
+      body: miningData == null
+          ? Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Text('Best Coin to Mine: ${miningData!['best_coin'].toString().toUpperCase()}',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 10),
+                  Text('Predicted Profit: ${miningData!['profit'].toStringAsFixed(6)} BTC/day'),
+                  Text('Energy Cost: \$${miningData!['energy_cost'].toStringAsFixed(2)}/kWh'),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: fetchMiningData,
+                    child: Text('Refresh'),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+}
+
+
+
+App Dashboard:
+
+EnergyAImpact - AI Mining
+Best Coin to Mine: BITCOIN
+Predicted Profit: 0.001200 BTC/day
+Energy Cost: $0.12/kWh
+[Refresh Button]
