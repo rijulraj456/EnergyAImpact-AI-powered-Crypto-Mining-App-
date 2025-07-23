@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
 
 
-Frontend: Flutter (Simplified Example)This creates a mobile app interface to display AI recommendations and mining stats.
+Frontend: Flutter (Simplified Example)This creates a mobile app interface to display AI recommendations and mining stats.)
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
