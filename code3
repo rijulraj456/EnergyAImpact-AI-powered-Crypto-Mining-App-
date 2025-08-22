@@ -1,0 +1,15 @@
+  Text('Best Coin to Mine: ${miningData!['best_coin'].toString().toUpperCase()}',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 10),
+                  Text('Predicted Profit: ${miningData!['profit'].toStringAsFixed(6)} BTC/day'),
+                  Text('Energy Cost: \$${miningData!['energy_cost'].toStringAsFixed(2)}/kWh'),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: fetchMiningData,
+                    child: Text('Refresh'),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
