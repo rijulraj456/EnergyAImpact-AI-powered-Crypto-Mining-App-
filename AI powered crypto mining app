@@ -1,0 +1,147 @@
+import hashlib
+import time
+import random
+import numpy as np
+from sklearn.linear_model import LinearRegression
+import threading
+import json
+from datetime import datetime
+
+# Simulated blockchain block
+class Block:
+    def __init__(self, index, previous_hash, transactions, timestamp):
+        self.index = index
+        self.previous_hash = previous_hash
+        self.transactions = transactions
+        self.timestamp = timestamp
+        self.nonce = 0
+        self.hash = self.calculate_hash()
+
+    def calculate_hash(self):
+        block_string = f"{self.index}{self.previous_hash}{self.transactions}{self.nonce}{self.timestamp}"
+        return hashlib.sha256(block_string.encode()).hexdigest()
+
+# AI-powered mining optimizer
+class AIMiningOptimizer:
+    def __init__(self):
+        # Simulated historical data: [energy_cost, hardware_load, mining_difficulty] -> profit
+        self.X = np.array([
+            [0.05, 0.8, 10], [0.07, 0.9, 12], [0.04, 0.7, 8], [0.06, 0.85, 11],
+            [0.03, 0.6, 9], [0.08, 0.95, 13], [0.05, 0.75, 10]
+        ])
+        self.y = np.array([100, 90, 110, 95, 120, 85, 105])  # Simulated profit
+        self.model = LinearRegression()
+        self.model.fit(self.X, self.y)
+
+    def optimize_mining_params(self, energy_cost, hardware_load, difficulty):
+        # Predict optimal mining intensity (0 to 1) based on inputs
+        features = np.array([[energy_cost, hardware_load, difficulty]])
+        predicted_profit = self.model.predict(features)[0]
+        # Simple heuristic: scale intensity based on predicted profit
+        intensity = min(1.0, max(0.1, predicted_profit / 100))
+        return intensity
+
+# Mining app
+class CryptoMiningApp:
+    def __init__(self):
+        self.optimizer = AIMiningOptimizer()
+        self.blocks_mined = 0
+        self.balance = 0.0
+        self.running = False
+        self.difficulty = 4  # Number of leading zeros required in hash
+        self.mining_thread = None
+
+    def proof_of_work(self, block):
+        target = "0" * self.difficulty
+        start_time = time.time()
+        while block.hash[:self.difficulty] != target:
+            block.nonce += 1
+            block.hash = block.calculate_hash()
+            if not self.running:
+                return False
+        elapsed_time = time.time() - start_time
+        print(f"Block mined! Nonce: {block.nonce}, Hash: {block.hash}, Time: {elapsed_time:.2f}s")
+        return True
+
+    def simulate_energy_cost(self):
+        # Simulate fluctuating energy cost (cents per kWh)
+        return round(random.uniform(0.03, 0.08), 2)
+
+    def simulate_hardware_load(self):
+        # Simulate hardware load (0 to 1)
+        return round(random.uniform(0.6, 0.95), 2)
+
+    def mine_block(self):
+        index = self.blocks_mined + 1
+        previous_hash = "0" * 64 if index == 1 else self.last_block.hash
+        transactions = f"TransactionData{index}"
+        timestamp = str(datetime.now())
+        block = Block(index, previous_hash, transactions, timestamp)
+
+        # AI-driven optimization
+        energy_cost = self.simulate_energy_cost()
+        hardware_load = self.simulate_hardware_load()
+        intensity = self.optimizer.optimize_mining_params(energy_cost, hardware_load, self.difficulty)
+        print(f"AI Optimization: Energy Cost={energy_cost}, Load={hardware_load}, Intensity={intensity:.2f}")
+
+        # Simulate mining with intensity affecting speed
+        time.sleep(2 * (1 - intensity))  # Lower intensity = longer mining time
+        if self.proof_of_work(block):
+            self.blocks_mined += 1
+            self.balance += 0.001 * intensity  # Simulated reward in BTC
+            self.last_block = block
+            print(f"Balance: {self.balance:.6f} BTC")
+
+    def start_mining(self):
+        self.running = True
+        print("Starting AI-powered crypto mining...")
+        while self.running:
+            self.mine_block()
+            time.sleep(1)  # Simulate interval between mining attempts
+
+    def stop_mining(self):
+        self.running = False
+        if self.mining_thread:
+            self.mining_thread.join()
+        print("Mining stopped.")
+
+    def monitor_mining(self):
+        # Simulate real-time monitoring
+        while self.running:
+            print(f"Status: Mining, Blocks Mined: {self.blocks_mined}, Balance: {self.balance:.6f} BTC")
+            time.sleep(5)
+
+    def run(self):
+        print("=== AI-Powered Crypto Mining App ===")
+        print("1. Start Mining")
+        print("2. Stop Mining")
+        print("3. Check Balance")
+        print("4. Exit")
+        
+        self.mining_thread = threading.Thread(target=self.start_mining)
+        monitor_thread = threading.Thread(target=self.monitor_mining)
+        
+        while True:
+            choice = input("Enter choice (1-4): ")
+            if choice == "1":
+                if not self.running:
+                    self.mining_thread = threading.Thread(target=self.start_mining)
+                    monitor_thread = threading.Thread(target=self.monitor_mining)
+                    self.mining_thread.start()
+                    monitor_thread.start()
+                else:
+                    print("Mining already in progress.")
+            elif choice == "2":
+                self.stop_mining()
+            elif choice == "3":
+                print(f"Current Balance: {self.balance:.6f} BTC")
+            elif choice == "4":
+                self.stop_mining()
+                break
+            else:
+                print("Invalid choice.")
+
+# Run the app
+if __name__ == "__main__":
+    app = CryptoMiningApp()
+    app.run()
